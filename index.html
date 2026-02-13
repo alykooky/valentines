@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Valentine Match 💘</title>
+    <style>
+        :root {
+            --pink: #ff4d88;
+            --pink2: #ff2f6d;
+            --bg1: #fff0f6;
+            --bg2: #f6f3ff;
+            --card: #ffffff;
+            --text: #121212;
+            --muted: #6b7280;
+            --line: rgba(0, 0, 0, .08);
+            --shadow: 0 14px 40px rgba(0, 0, 0, .10);
+            --radius: 22px;
+            --okbg: #eafff0;
+            --warnbg: #fff4e5;
+            --badbg: #ffe9e9;
+            --okbd: #b7f7c7;
+            --warnbd: #ffd59c;
+            --badbd: #ffb3b3;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+            color: var(--text);
+            background:
+                radial-gradient(1200px 500px at 15% 10%, rgba(255, 77, 136, .22), transparent 60%),
+                radial-gradient(1000px 600px at 85% 20%, rgba(139, 92, 246, .18), transparent 55%),
+                linear-gradient(140deg, var(--bg1), var(--bg2));
+            overflow-x: hidden;
+        }
+
+        .heart {
+            position: fixed;
+            width: 14px;
+            height: 14px;
+            background: rgba(255, 77, 136, .25);
+            transform: rotate(45deg);
+            border-radius: 3px;
+            z-index: 0;
+            animation: floatUp 10s linear infinite;
+            filter: blur(.2px);
+        }
+
+        .heart:before,
+        .heart:after {
+            content: "";
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: rgba(255, 77, 136, .25);
+            border-radius: 50%;
+        }
+
+        .heart:before {
+            left: -7px;
+            top: 0;
+        }
+
+        .heart:after {
+            top: -7px;
+            left: 0;
+        }
+
+        @keyframes floatUp {
+            from {
+                transform: translateY(20vh) rotate(45deg);
+                opacity: .0;
+            }
+
+            10% {
+                opacity: .8;
+            }
+
+            to {
+                transform: translateY(-120vh) rotate(45deg);
+                opacity: 0;
+            }
+        }
+
+        .wrap {
+            width: min(860px, 96vw);
+            position: relative;
+            z-index: 1;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .brand {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--pink), #a78bfa);
+            box-shadow: 0 12px 22px rgba(255, 77, 136, .22);
+            display: grid;
+            place-items: center;
+            font-weight: 900;
+            color: white;
+            user-select: none;
+        }
+
+        .brandText h1 {
+            font-size: 16px;
+            margin: 0;
+            letter-spacing: .2px;
+        }
+
+        .brandText p {
+            margin: 2px 0 0;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .progressWrap {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .progress {
+            width: min(420px, 58vw);
+            background: rgba(255, 255, 255, .65);
+            border: 1px solid rgba(0, 0, 0, .06);
+            border-radius: 999px;
+            padding: 6px;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, .06);
+            backdrop-filter: blur(10px);
+        }
+
+        .bar {
+            height: 10px;
+            border-radius: 999px;
+            width: 0%;
+            background: linear-gradient(90deg, var(--pink), #a78bfa);
+            transition: width .35s ease;
+        }
+
+        .stepLabel {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 6px;
+            padding: 0 2px;
+            user-select: none;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, .78);
+            border: 1px solid rgba(0, 0, 0, .06);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 22px;
+            backdrop-filter: blur(10px);
+        }
+
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1.15fr .85fr;
+            gap: 14px;
+        }
+
+        @media (max-width:780px) {
+            .grid2 {
+                grid-template-columns: 1fr;
+            }
+
+            .progressWrap {
+                justify-content: flex-start;
+            }
+
+            .progress {
+                width: 100%;
+            }
+        }
+
+        .title {
+            font-size: 30px;
+            margin: 0 0 6px;
+            letter-spacing: -.2px;
+        }
+
+        .subtitle {
+            margin: 0 0 12px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .panel {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 14px;
+        }
+
+        label {
+            display: block;
+            font-weight: 800;
+            font-size: 12px;
+            margin: 12px 0 6px;
+            color: #111;
+            letter-spacing: .2px;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(0, 0, 0, .10);
+            background: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: border .2s ease, box-shadow .2s ease;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: rgba(255, 77, 136, .55);
+            box-shadow: 0 0 0 4px rgba(255, 77, 136, .12);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button {
+            border: 0;
+            border-radius: 16px;
+            padding: 12px 14px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: transform .05s ease, filter .15s ease;
+            user-select: none;
+        }
+
+        button:active {
+            transform: scale(.98);
+        }
+
+        .primary {
+            color: #fff;
+            background: linear-gradient(135deg, var(--pink), var(--pink2));
+            box-shadow: 0 14px 22px rgba(255, 77, 136, .22);
+        }
+
+        .secondary {
+            background: rgba(255, 255, 255, .9);
+            border: 1px solid rgba(0, 0, 0, .08);
+        }
+
+        .chip {
+            background: rgba(0, 0, 0, .04);
+            border: 1px solid rgba(0, 0, 0, .06);
+            color: #111;
+            padding: 10px 12px;
+            border-radius: 999px;
+            font-weight: 900;
+            font-size: 13px;
+        }
+
+        .chip.selected {
+            border-color: rgba(255, 77, 136, .55);
+            box-shadow: 0 0 0 4px rgba(255, 77, 136, .12);
+            background: rgba(255, 77, 136, .08);
+        }
+
+        .alert {
+            margin-top: 10px;
+            padding: 12px 12px;
+            border-radius: 16px;
+            border: 1px solid transparent;
+            font-weight: 800;
+            font-size: 13px;
+            line-height: 1.4;
+            white-space: pre-line;
+        }
+
+        .ok {
+            background: var(--okbg);
+            border-color: var(--okbd);
+        }
+
+        .warn {
+            background: var(--warnbg);
+            border-color: var(--warnbd);
+        }
+
+        .bad {
+            background: var(--badbg);
+            border-color: var(--badbd);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .mini {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .fadeIn {
+            animation: pop .22s ease;
+        }
+
+        @keyframes pop {
+            from {
+                transform: translateY(6px);
+                opacity: .0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .ticket {
+            margin-top: 10px;
+            border-radius: 26px;
+            background: linear-gradient(180deg, #fff, #fff7fb);
+            border: 2px dashed rgba(0, 0, 0, .16);
+            padding: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ticket:before {
+            content: "";
+            position: absolute;
+            inset: -60px -60px auto auto;
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 77, 136, .25), transparent 60%);
+            transform: rotate(12deg);
+        }
+
+        .ticketTop {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            position: relative;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: rgba(255, 77, 136, .12);
+            font-weight: 1000;
+            font-size: 12px;
+            border: 1px solid rgba(255, 77, 136, .25);
+            white-space: nowrap;
+        }
+
+        .big {
+            font-size: 22px;
+            font-weight: 1000;
+            margin: 0;
+        }
+
+        .gridInfo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 12px;
+            position: relative;
+        }
+
+        @media (max-width:620px) {
+            .gridInfo {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .kv {
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, .08);
+            border-radius: 16px;
+            padding: 12px;
+        }
+
+        .k {
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 1000;
+            letter-spacing: .3px;
+            text-transform: uppercase;
+        }
+
+        .v {
+            margin-top: 5px;
+            font-weight: 1000;
+        }
+
+        pre {
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, .08);
+            border-radius: 16px;
+            padding: 12px;
+            white-space: pre-wrap;
+            font-size: 13px;
+            margin: 10px 0 0;
+        }
+
+        .noZone {
+            display: inline-flex;
+            position: relative;
+            padding: 4px;
+            border-radius: 18px;
+            border: 1px dashed rgba(0, 0, 0, .18);
+        }
+
+        .noBtn {
+            position: relative;
+            will-change: transform;
+        }
+
+        .loaderWrap {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 12px;
+        }
+
+        .spinner {
+            width: 46px;
+            height: 46px;
+            border-radius: 999px;
+            border: 5px solid rgba(0, 0, 0, .08);
+            border-top-color: rgba(255, 77, 136, .8);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .pill {
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 0, 0, .08);
+            background: rgba(255, 255, 255, .75);
+            font-weight: 900;
+            font-size: 12px;
+            color: #111;
+        }
+
+        .divider {
+            height: 1px;
+            background: rgba(0, 0, 0, .08);
+            margin: 14px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="heart" style="left:8%; animation-delay:0s; animation-duration:11s;"></div>
+    <div class="heart" style="left:18%; animation-delay:2s; animation-duration:10s;"></div>
+    <div class="heart" style="left:38%; animation-delay:1s; animation-duration:12s;"></div>
+    <div class="heart" style="left:58%; animation-delay:3s; animation-duration:9s;"></div>
+    <div class="heart" style="left:78%; animation-delay:0.6s; animation-duration:13s;"></div>
+    <div class="heart" style="left:90%; animation-delay:2.6s; animation-duration:10.5s;"></div>
+
+    <div class="wrap">
+        <div class="topbar">
+            <div class="brand">
+                <div class="logo">💘</div>
+                <div class="brandText">
+                    <h1>Valentine Matchmaker</h1>
+                    <p>For Kai's Girlfriend Only</p>
+                </div>
+            </div>
+
+            <div class="progressWrap">
+                <div class="progress">
+                    <div class="bar" id="bar"></div>
+                    <div class="stepLabel">
+                        <span id="stepText">Step 1 of 6</span>
+                        <span id="stepHint">Identity check</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card fadeIn">
+            <!-- STEP 1 -->
+            <section id="step1" class="fadeIn">
+                <div class="grid2">
+                    <div>
+                        <h1 class="title">Hi! Welcome</h1>
+                        <p class="subtitle">
+                            This website is for Valentine’s Day Matchmaker. But first… I need to make sure it’s really
+                            you.
+                        </p>
+
+                        <div class="panel">
+                            <label for="nameInput">Enter your name</label>
+                            <input id="nameInput" placeholder="Type your name" autocomplete="off" />
+                            <div id="nameAlert" class="alert hidden"></div>
+
+                            <div class="row" style="margin-top:12px">
+                                <button class="primary" id="nameNextBtn">Continue →</button>
+                                <button class="secondary" id="nameHintBtn">Need a hint?</button>
+                            </div>
+
+                            <p class="mini" style="margin-top:10px">
+                                (Wrong name = website refuses to proceed because it’s loyal.)
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <p style="margin:0; font-weight:1000;">What you unlock:</p>
+                        <p class="mini" style="margin:8px 0 0;">
+                            • mini quiz<br />
+                            • date preferences<br />
+                            • time matching (with my work schedule)<br />
+                            • analysis + match screen<br />
+                            • cute reservation ticket 🎟️
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STEP 2 -->
+            <section id="step2" class="hidden fadeIn">
+                <h2 style="margin:0 0 8px; font-size:22px;">Hi, <span id="herNameText">love</span> 💘</h2>
+                <p class="subtitle" style="margin-bottom:12px;">
+                    Tiny quiz. Don’t overthink it. I’m watching. 👀
+                </p>
+
+                <div class="panel">
+                    <label>Do you already have a Valentine’s date?</label>
+                    <div class="row" id="hasDateRow">
+                        <button class="chip" data-val="yes">Yes 😳</button>
+                        <button class="chip" data-val="no">No 🙂</button>
+                    </div>
+                    <div id="dateAlert" class="alert hidden"></div>
+
+                    <div class="row" style="margin-top:12px">
+                        <button class="primary" id="quizNextBtn">Next →</button>
+                        <button class="secondary" id="backTo1">← Back</button>
+                    </div>
+
+                    <p class="mini" style="margin-top:10px;">
+                        (If you say “Yes”… the website will get jealous and block you 😤)
+                    </p>
+                </div>
+            </section>
+
+            <!-- STEP 3 -->
+            <section id="step3" class="hidden fadeIn">
+                <h2 style="margin:0 0 8px; font-size:22px;">Build your dream date ✨</h2>
+                <p class="subtitle">
+                    Choose what you want, and I’ll match it with me. (This is not negotiable.)
+                </p>
+
+                <div class="grid2">
+                    <div class="panel">
+                        <label>Do you already have a place in mind?</label>
+                        <div class="row" id="placeKnownRow">
+                            <button class="chip" data-known="yes">Yes, I do</button>
+                            <button class="chip" data-known="no">No, surprise me</button>
+                        </div>
+
+                        <div id="placeInputWrap" class="hidden">
+                            <label for="placeInput">What place?</label>
+                            <input id="placeInput" placeholder="Cafe / restaurant / mall / area name…" />
+                        </div>
+
+                        <label>Do you already know what you want to eat?</label>
+                        <div class="row" id="foodKnownRow">
+                            <button class="chip" data-known="yes">Yes</button>
+                            <button class="chip" data-known="no">No</button>
+                        </div>
+
+                        <div id="foodInputWrap" class="hidden">
+                            <label for="foodInput">What food?</label>
+                            <input id="foodInput" placeholder="Example: chicken, samgyup, seafood..." />
+                        </div>
+
+                        <label>Or pick from a list</label>
+                        <select id="foodSel">
+                            <option value="">Pick one</option>
+                            <option>Japanese</option>
+                            <option>Korean</option>
+                            <option>Filipino</option>
+                            <option>Seafood</option>
+                            <option>Café / Brunch</option>
+                            <option>Hotpot / Samgyup</option>
+                            <option>Dessert & coffee</option>
+                            <option>Surprise me</option>
+                        </select>
+
+                        <label>Place vibe</label>
+                        <div class="row" id="vibeRow">
+                            <button class="chip" data-vibe="Cozy & quiet">Cozy & quiet</button>
+                            <button class="chip" data-vibe="Romantic fancy">Romantic fancy</button>
+                            <button class="chip" data-vibe="Cute café">Cute café</button>
+                            <button class="chip" data-vibe="Aesthetic ✨">Aesthetic ✨</button>
+                            <button class="chip" data-vibe="Something new">Something new</button>
+                        </div>
+
+                        <label>Notes (optional)</label>
+                        <textarea id="notes" placeholder="Crowd level, budget, must-haves, etc."></textarea>
+                    </div>
+
+                    <div class="panel">
+                        <h3 style="margin:0 0 8px; font-size:16px;">Time matching ⏰</h3>
+                        <p class="mini" style="margin:0 0 10px;">
+                            Pick your available time window. I’m not available from <strong>12:00–20:00</strong> (work
+                            😭).
+                        </p>
+
+                        <div class="row" style="gap:12px">
+                            <div style="flex:1">
+                                <label for="startTime">Start</label>
+                                <input id="startTime" type="time" />
+                            </div>
+                            <div style="flex:1">
+                                <label for="endTime">End</label>
+                                <input id="endTime" type="time" />
+                            </div>
+                        </div>
+
+                        <div id="timeAlert" class="alert hidden"></div>
+
+                        <div class="panel" style="margin-top:12px;">
+                            <p class="mini" style="margin:0;">
+                                After-date ideas will adjust if it’s late (so we don’t plan something that’s probably
+                                closed).
+                            </p>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <h3 style="margin:0 0 8px; font-size:16px;">After-date idea 🌙</h3>
+                        <div class="row" id="afterRow"></div>
+                        <div id="lateHint" class="alert hidden"></div>
+
+                        <div class="divider"></div>
+                        <div class="row">
+                            <button class="primary" id="matchBtn">Analyze & find my match 💘</button>
+                            <button class="secondary" id="backTo2">← Back</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STEP 4: Analysis -->
+            <section id="step4" class="hidden fadeIn">
+                <h2 style="margin:0 0 8px; font-size:22px;">Analyzing your answers… 🧠💘</h2>
+                <p class="subtitle">Calculating compatibility. Checking vibes. Verifying love level.</p>
+
+                <div class="panel">
+                    <div class="loaderWrap">
+                        <div class="spinner"></div>
+                        <div class="pill" id="analysisLine">Running: “Is she the cutest?” → YES</div>
+                        <div class="mini">Please do not close the tab… or I’ll get sad.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STEP 5: Match / confirm -->
+            <section id="step5" class="hidden fadeIn">
+                <h2 style="margin:0 0 8px; font-size:22px;">Match found ✅</h2>
+                <p class="subtitle" style="margin-bottom:12px;">
+                    The algorithm worked extremely hard and concluded something shocking.
+                </p>
+
+                <div class="panel">
+                    <p style="margin:0; font-weight:1000;">Compatibility: <span style="color:var(--pink)">100%</span>
+                    </p>
+                    <p style="margin:6px 0 0">Your match is… <strong id="matchName">ME</strong> 😌💖</p>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="panel" id="planSummary"></div>
+
+                <div class="row" style="margin-top:12px; align-items:center;">
+                    <button class="primary" id="confirmYes">Yes, confirm 💌</button>
+                    <span class="noZone">
+                        <button class="secondary noBtn" id="confirmNo">No</button>
+                    </span>
+                </div>
+
+                <div id="confirmAlert" class="alert hidden"></div>
+            </section>
+
+            <!-- STEP 6: Reservation -->
+            <section id="step6" class="hidden fadeIn">
+                <h2 style="margin:0 0 8px; font-size:22px;">Reservation confirmed 🎟️💖</h2>
+                <p class="subtitle">Show this to me as your official receipt 😌</p>
+
+                <div class="ticket">
+                    <div class="ticketTop">
+                        <div>
+                            <p class="big">Valentine’s Reservation</p>
+                            <p class="mini" style="margin:6px 0 0;">Table for 2 • Love edition</p>
+                        </div>
+                        <span class="badge">CONFIRMED</span>
+                    </div>
+
+                    <div class="gridInfo">
+                        <div class="kv">
+                            <div class="k">Guest</div>
+                            <div class="v" id="ticketGuest">—</div>
+                        </div>
+                        <div class="kv">
+                            <div class="k">Date</div>
+                            <div class="v" id="ticketDate">Valentine’s Day</div>
+                        </div>
+                        <div class="kv">
+                            <div class="k">Time</div>
+                            <div class="v" id="ticketTime">—</div>
+                        </div>
+                        <div class="kv">
+                            <div class="k">Food</div>
+                            <div class="v" id="ticketFood">—</div>
+                        </div>
+                        <div class="kv">
+                            <div class="k">Place</div>
+                            <div class="v" id="ticketPlace">—</div>
+                        </div>
+                        <div class="kv">
+                            <div class="k">After</div>
+                            <div class="v" id="ticketAfter">—</div>
+                        </div>
+                        <div class="kv" style="grid-column:1/-1">
+                            <div class="k">Notes</div>
+                            <div class="v" id="ticketNotes">—</div>
+                        </div>
+                        <div class="kv" style="grid-column:1/-1">
+                            <div class="k">Reservation Code</div>
+                            <div class="v" id="ticketCode">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel" style="margin-top:12px;">
+                    <label for="gfEmail">Her email</label>
+                    <input id="gfEmail" type="email" placeholder="example@gmail.com" />
+
+                    <p style="margin:12px 0 0; font-weight:1000;">Copy and/or send:</p>
+                    <pre id="finalText"></pre>
+
+                    <div class="row" style="margin-top:10px;">
+                        <button class="primary" id="copyFinal">Copy ✅</button>
+                        <button class="secondary" id="emailFinal">Send email 💌</button>
+                        <button class="secondary" id="restart">Restart</button>
+                    </div>
+
+                    <div id="emailAlert" class="alert hidden"></div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        /** =========================
+         *  EDIT THESE
+         *  ========================= */
+        const HER_ALLOWED_NAMES = ["Jv", "Angel"];
+        const YOUR_NAME = "Kai";
+        const YOUR_BUSY_START = "12:00";
+        const YOUR_BUSY_END = "20:00";
+        const BLOCK_OVERLAP = true;
+
+        // If PHP is same folder: "send_email.php"
+        // If PHP is hosted elsewhere: "https://your-php-domain.com/send_email.php"
+        const EMAIL_ENDPOINT = "send_email.php";
+
+        // Late threshold
+        const LATE_START_MINUTES = 22 * 60;
+
+        /** =========================
+         *  Helpers
+         *  ========================= */
+        const $ = (id) => document.getElementById(id);
+
+        function show(el) { el.classList.remove("hidden"); el.classList.add("fadeIn"); }
+        function hide(el) { el.classList.add("hidden"); el.classList.remove("fadeIn"); }
+
+        function setProgress(step) {
+            const map = {
+                1: ["Identity check", 16],
+                2: ["Mini quiz", 32],
+                3: ["Preferences + time", 48],
+                4: ["Analysis", 64],
+                5: ["Confirm", 82],
+                6: ["Reservation", 100],
+            };
+            $("stepText").textContent = `Step ${step} of 6`;
+            $("stepHint").textContent = map[step][0];
+            $("bar").style.width = map[step][1] + "%";
+        }
+
+        function goto(stepId, stepNum) {
+            ["step1", "step2", "step3", "step4", "step5", "step6"].forEach(s => hide($(s)));
+            show($(stepId));
+            setProgress(stepNum);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        function alertBox(el, type, msg) {
+            el.className = "alert " + type;
+            el.textContent = msg;
+            show(el);
+        }
+
+        function norm(s) { return (s || "").trim().toLowerCase(); }
+
+        function timeToMinutes(t) {
+            const [h, m] = t.split(":").map(Number);
+            return h * 60 + m;
+        }
+
+        function overlaps(aStart, aEnd, bStart, bEnd) {
+            return Math.max(aStart, bStart) < Math.min(aEnd, bEnd);
+        }
+
+        function randomCode() {
+            const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+            let out = "";
+            for (let i = 0; i < 8; i++) out += chars[Math.floor(Math.random() * chars.length)];
+            return out;
+        }
+
+        function exclusiveChips(containerId, key, datasetKey) {
+            const row = $(containerId);
+            row.querySelectorAll("button").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    row.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
+                    btn.classList.add("selected");
+                    state[key] = btn.dataset[datasetKey];
+                });
+            });
+        }
+
+        async function sendEmailNetlify(to, name, summary) {
+            const res = await fetch("/.netlify/functions/sendEmail", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ to, name, summary })
+            });
+            return await res.json();
+        }
+
+
+        const text = await res.text();
+        try {
+            return JSON.parse(text);
+        } catch {
+            return { ok: false, message: "Server returned non-JSON. Check send_email.php path or PHP error.", raw: text };
+        }
+
+        /** =========================
+         *  State
+         *  ========================= */
+        const state = {
+            herName: "",
+            hasDate: "",
+            placeKnown: "",
+            placeText: "",
+            foodKnown: "",
+            foodText: "",
+            foodList: "",
+            vibe: "",
+            after: "",
+            notes: "",
+            startTime: "",
+            endTime: "",
+            reservationCode: "",
+            finalSummary: ""
+        };
+
+        /** =========================
+         *  Step 1
+         *  ========================= */
+        $("nameHintBtn").addEventListener("click", () => {
+            alertBox($("nameAlert"), "warn", "Hint: try your exact name / nickname 😌");
+        });
+
+        $("nameNextBtn").addEventListener("click", () => {
+            const input = $("nameInput").value;
+            const ok = HER_ALLOWED_NAMES.map(norm).includes(norm(input));
+
+            if (!norm(input)) {
+                alertBox($("nameAlert"), "bad", "Type your name first 🙂");
+                return;
+            }
+            if (!ok) {
+                alertBox($("nameAlert"), "bad", "Nope 😤 That’s not you. Try again.");
+                return;
+            }
+            state.herName = input.trim();
+            hide($("nameAlert"));
+            $("herNameText").textContent = state.herName;
+            goto("step2", 2);
+        });
+
+        $("nameInput").addEventListener("keydown", (e) => {
+            if (e.key === "Enter") $("nameNextBtn").click();
+        });
+
+        /** =========================
+         *  Step 2
+         *  ========================= */
+        (function setupHasDate() {
+            const row = $("hasDateRow");
+            row.querySelectorAll("button").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    row.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
+                    btn.classList.add("selected");
+                    state.hasDate = btn.dataset.val;
+                    hide($("dateAlert"));
+
+                    if (state.hasDate === "yes") {
+                        alertBox($("dateAlert"), "bad",
+                            "EXCUSE ME??? WHO TF IS THAT?!?!? 😤💔\nBro I'm your girlfriend?!?!\nPick NO right now 😭"
+                        );
+                    } else {
+                        alertBox($("dateAlert"), "ok", "Good hehe. Correct answer 😌✅");
+                    }
+                });
+            });
+        })();
+
+        $("quizNextBtn").addEventListener("click", () => {
+            if (!state.hasDate) {
+                alertBox($("dateAlert"), "warn", "Answer the question first 😌");
+                return;
+            }
+            if (state.hasDate === "yes") {
+                alertBox($("dateAlert"), "bad",
+                    "Nope. You can’t proceed with ‘YES’ 😤\nChange it to ‘NO’ so we can continue graah!"
+                );
+                return;
+            }
+            goto("step3", 3);
+        });
+
+        $("backTo1").addEventListener("click", () => goto("step1", 1));
+
+        /** =========================
+         *  Step 3
+         *  ========================= */
+        exclusiveChips("placeKnownRow", "placeKnown", "known");
+        exclusiveChips("foodKnownRow", "foodKnown", "known");
+        exclusiveChips("vibeRow", "vibe", "vibe");
+
+        $("placeKnownRow").addEventListener("click", () => {
+            if (state.placeKnown === "yes") show($("placeInputWrap"));
+            else hide($("placeInputWrap"));
+        });
+
+        $("foodKnownRow").addEventListener("click", () => {
+            if (state.foodKnown === "yes") show($("foodInputWrap"));
+            else hide($("foodInputWrap"));
+        });
+
+        $("backTo2").addEventListener("click", () => goto("step2", 2));
+
+        function buildAfterIdeas(isLate) {
+            const row = $("afterRow");
+            row.innerHTML = "";
+
+            const always = [
+                "No after-date, I just want to go home 🏠",
+                "Stay longer at the same spot 🕰️",
+                "Walk + talk 🌙",
+                "Dessert & coffee 🍰",
+                "Movie (home) 🎬"
+            ];
+
+            const earlyExtras = [
+                "Arcade / games 🎮",
+                "Photobooth 📸"
+            ];
+
+            const lateExtras = [
+                "Drive-thru snacks 🍟",
+                "Stargazing / quiet spot ✨",
+                "Home cuddle session 🫶"
+            ];
+
+            const list = isLate ? [...always, ...lateExtras] : [...always, ...earlyExtras];
+
+            list.forEach((label) => {
+                const btn = document.createElement("button");
+                btn.className = "chip";
+                btn.textContent = label;
+                btn.dataset.after = label;
+                btn.addEventListener("click", () => {
+                    row.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
+                    btn.classList.add("selected");
+                    state.after = label;
+                });
+                row.appendChild(btn);
+            });
+        }
+
+        function validateTimeAndRefreshIdeas() {
+            const start = $("startTime").value;
+            const end = $("endTime").value;
+            state.startTime = start;
+            state.endTime = end;
+
+            if (!start || !end) {
+                buildAfterIdeas(false);
+                alertBox($("timeAlert"), "warn", "Set both start and end time.");
+                hide($("lateHint"));
+                return false;
+            }
+            const s = timeToMinutes(start);
+            const e = timeToMinutes(end);
+
+            if (e <= s) {
+                buildAfterIdeas(false);
+                alertBox($("timeAlert"), "bad", "End time must be after start time 🙂");
+                hide($("lateHint"));
+                return false;
+            }
+
+            const bs = timeToMinutes(YOUR_BUSY_START);
+            const be = timeToMinutes(YOUR_BUSY_END);
+
+            if (overlaps(s, e, bs, be)) {
+                if (BLOCK_OVERLAP) {
+                    buildAfterIdeas(false);
+                    alertBox($("timeAlert"), "bad", `That overlaps my work time (${YOUR_BUSY_START}–${YOUR_BUSY_END}) 😭 Pick another slot pls`);
+                    hide($("lateHint"));
+                    return false;
+                } else {
+                    alertBox($("timeAlert"), "warn", `That overlaps my work time (${YOUR_BUSY_START}–${YOUR_BUSY_END}). We can try… but later is safer 😅`);
+                }
+            } else {
+                alertBox($("timeAlert"), "ok", "Timing looks good ✅");
+            }
+
+            const isLate = s >= LATE_START_MINUTES;
+            buildAfterIdeas(isLate);
+
+            if (isLate) {
+                alertBox($("lateHint"), "warn", "It’s kinda late — showing late-friendly options so we don’t plan something that’s likely closed 😅");
+            } else {
+                hide($("lateHint"));
+            }
+            return true;
+        }
+
+        $("startTime").addEventListener("change", validateTimeAndRefreshIdeas);
+        $("endTime").addEventListener("change", validateTimeAndRefreshIdeas);
+
+        buildAfterIdeas(false);
+
+        function buildPlanSummary() {
+            const placeFinal = state.placeKnown === "yes" ? ($("placeInput").value.trim()) : "(surprise me)";
+            const foodFinal = state.foodKnown === "yes" ? ($("foodInput").value.trim()) : ($("foodSel").value.trim());
+
+            const summaryHtml = `
+        <p style="margin:0; font-weight:1000;">Plan preview 💌</p>
+        <p style="margin:10px 0 0;"><strong>For:</strong> ${state.herName}</p>
+        <p style="margin:6px 0 0;"><strong>Time:</strong> ${state.startTime} – ${state.endTime}</p>
+        <p style="margin:6px 0 0;"><strong>Place:</strong> ${placeFinal}</p>
+        <p style="margin:6px 0 0;"><strong>Food:</strong> ${foodFinal}</p>
+        <p style="margin:6px 0 0;"><strong>Vibe:</strong> ${state.vibe}</p>
+        <p style="margin:6px 0 0;"><strong>After:</strong> ${state.after}</p>
+        <p style="margin:6px 0 0;"><strong>Notes:</strong> ${state.notes ? state.notes : "(none)"}</p>
+      `;
+
+            const summaryText =
+                `Valentine Reservation 💖
+Guest: ${state.herName}
+Match: ${YOUR_NAME}
+Time: ${state.startTime} – ${state.endTime}
+Place: ${placeFinal}
+Food: ${foodFinal}
+Vibe: ${state.vibe}
+After: ${state.after}
+Notes: ${state.notes ? state.notes : "(none)"}
+Code: ${state.reservationCode}`;
+
+            return { placeFinal, foodFinal, summaryHtml, summaryText };
+        }
+
+        $("matchBtn").addEventListener("click", () => {
+            state.placeText = $("placeInput").value.trim();
+            state.foodText = $("foodInput").value.trim();
+            state.foodList = $("foodSel").value.trim();
+            state.notes = $("notes").value.trim();
+
+            if (!state.placeKnown) { alertBox($("timeAlert"), "bad", "Answer whether you already have a place in mind 🙂"); return; }
+            if (state.placeKnown === "yes" && !state.placeText) { alertBox($("timeAlert"), "bad", "Tell me what place you have in mind 🙂"); return; }
+
+            if (!state.foodKnown) { alertBox($("timeAlert"), "bad", "Answer whether you already know what you want to eat 🙂"); return; }
+            if (state.foodKnown === "yes" && !state.foodText) { alertBox($("timeAlert"), "bad", "Tell me what food you want 🙂"); return; }
+            if (state.foodKnown === "no" && !state.foodList) { alertBox($("timeAlert"), "bad", "Pick a food option from the list 🙂"); return; }
+
+            if (!state.vibe) { alertBox($("timeAlert"), "bad", "Pick a place vibe 🙂"); return; }
+            if (!state.after) { alertBox($("timeAlert"), "bad", "Pick an after-date option 🙂"); return; }
+
+            if (!validateTimeAndRefreshIdeas()) return;
+
+            goto("step4", 4);
+            runAnalysisThenShowMatch();
+        });
+
+        const analysisLines = [
+            'Running: “Is she the cutest?” → YES',
+            'Checking: “Vibe compatibility” → PERFECT',
+            'Computing: “Love score” → 9999/10',
+            'Validating: “Girlfriend availability” → OK ✅',
+            'Finalizing: “Reservation” → almost there…'
+        ];
+
+        function runAnalysisThenShowMatch() {
+            let i = 0;
+            const lineEl = $("analysisLine");
+            const timer = setInterval(() => {
+                lineEl.textContent = analysisLines[i % analysisLines.length];
+                i++;
+                if (i === 7) {
+                    clearInterval(timer);
+                    $("matchName").textContent = YOUR_NAME;
+                    state.reservationCode = randomCode();
+
+                    const { summaryHtml, summaryText } = buildPlanSummary();
+                    state.finalSummary = summaryText;
+                    $("planSummary").innerHTML = summaryHtml;
+
+                    hide($("confirmAlert"));
+                    goto("step5", 5);
+                }
+            }, 650);
+        }
+
+        const noBtn = $("confirmNo");
+        function dodge() {
+            const dx = Math.floor(Math.random() * 220) - 110;
+            const dy = Math.floor(Math.random() * 90) - 45;
+            noBtn.style.transform = `translate(${dx}px, ${dy}px)`;
+        }
+        noBtn.addEventListener("mouseover", dodge);
+        noBtn.addEventListener("click", () => {
+            alertBox($("confirmAlert"), "warn", "Are you sure sure? 😭 Try again…");
+            dodge();
+        });
+
+        $("confirmYes").addEventListener("click", () => {
+            const { placeFinal, foodFinal, summaryText } = buildPlanSummary();
+            state.finalSummary = summaryText;
+
+            $("ticketGuest").textContent = state.herName;
+            $("ticketTime").textContent = `${state.startTime} – ${state.endTime}`;
+            $("ticketFood").textContent = foodFinal;
+            $("ticketPlace").textContent = placeFinal;
+            $("ticketAfter").textContent = state.after;
+            $("ticketNotes").textContent = state.notes ? state.notes : "none";
+            $("ticketCode").textContent = state.reservationCode;
+
+            $("finalText").textContent = summaryText;
+            hide($("emailAlert"));
+            goto("step6", 6);
+        });
+
+        $("copyFinal").addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText($("finalText").textContent);
+                $("copyFinal").textContent = "Copied ✅";
+                setTimeout(() => $("copyFinal").textContent = "Copy ✅", 1200);
+            } catch (e) {
+                alert("Copy failed — just highlight and copy manually 🙂");
+            }
+        });
+
+        $("emailFinal").addEventListener("click", async () => {
+            const email = ($("gfEmail").value || "").trim();
+            if (!email) {
+                alertBox($("emailAlert"), "warn", "Please type her email first 🙂");
+                return;
+            }
+
+            alertBox($("emailAlert"), "warn", "Sending… 💌");
+
+            try {
+                const result = await sendEmailNetlify(email, state.herName, $("finalText").textContent);
+                if (result.ok) {
+                    alertBox($("emailAlert"), "ok", result.message || "Email sent ✅");
+                } else {
+                    alertBox($("emailAlert"), "bad", result.message || "Email failed to send.");
+                }
+            } catch (e) {
+                alertBox($("emailAlert"), "bad", "Network/server error sending email.");
+            }
+        });
+
+
+        $("backTo2").addEventListener("click", () => goto("step2", 2));
+
+        $("restart").addEventListener("click", () => {
+            Object.keys(state).forEach(k => state[k] = "");
+            $("nameInput").value = "";
+            $("placeInput").value = "";
+            $("foodInput").value = "";
+            $("foodSel").value = "";
+            $("notes").value = "";
+            $("startTime").value = "";
+            $("endTime").value = "";
+            $("gfEmail").value = "";
+
+            ["hasDateRow", "placeKnownRow", "foodKnownRow", "vibeRow", "afterRow"].forEach(id => {
+                const el = $(id);
+                el.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
+            });
+
+            hide($("placeInputWrap"));
+            hide($("foodInputWrap"));
+            hide($("nameAlert"));
+            hide($("dateAlert"));
+            hide($("timeAlert"));
+            hide($("lateHint"));
+            hide($("confirmAlert"));
+            hide($("emailAlert"));
+
+            noBtn.style.transform = "translate(0,0)";
+            buildAfterIdeas(false);
+            goto("step1", 1);
+        });
+
+        // Start
+        goto("step1", 1);
+    </script>
+</body>
+
+</html>
