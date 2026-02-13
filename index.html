@@ -739,6 +739,18 @@
                 <h2 style="margin:0 0 8px; font-size:22px;">Reservation confirmed 🎟️💖</h2>
                 <p class="subtitle">Show this to me as your official receipt 😌</p>
 
+                <div class="panel" style="margin-bottom:12px; display:flex; gap:14px; align-items:center;">
+                    <img src="kai.jpg" alt="Flower"
+                        style="width:110px; height:110px; object-fit:cover; border-radius:18px; border:1px solid rgba(0,0,0,.08);" />
+                    <div>
+                        <p style="margin:0; font-weight:1000;">A flower for you 🌸</p>
+                        <p class="mini" id="flowerMsg" style="margin:6px 0 0;">
+                            Here is your flower 💖
+                        </p>
+                    </div>
+                </div>
+
+
                 <div class="ticket">
                     <div class="ticketTop">
                         <div>
@@ -804,480 +816,468 @@
     </div>
 
     <script>
-        /** =========================
-         *  EDIT THESE
-         *  ========================= */
-        const HER_ALLOWED_NAMES = ["Jv", "Angel"];
-        const YOUR_NAME = "Kai";
-        const YOUR_BUSY_START = "12:00";
-        const YOUR_BUSY_END = "20:00";
-        const BLOCK_OVERLAP = true;
+        document.addEventListener("DOMContentLoaded", () => {
 
-        // If PHP is same folder: "send_email.php"
-        // If PHP is hosted elsewhere: "https://your-php-domain.com/send_email.php"
-        const EMAIL_ENDPOINT = "send_email.php";
+            /** =========================
+             *  EDIT THESE
+             *  ========================= */
+            const HER_ALLOWED_NAMES = ["Jv", "Angel", "jv", "angel"]; // added lowercase too (extra safe)
+            const YOUR_NAME = "Kai";
+            const YOUR_BUSY_START = "12:00";
+            const YOUR_BUSY_END = "20:00";
+            const BLOCK_OVERLAP = true;
 
-        // Late threshold
-        const LATE_START_MINUTES = 22 * 60;
+            // Late threshold
+            const LATE_START_MINUTES = 22 * 60;
 
-        /** =========================
-         *  Helpers
-         *  ========================= */
-        const $ = (id) => document.getElementById(id);
+            /** =========================
+             *  Helpers
+             *  ========================= */
+            const $ = (id) => document.getElementById(id);
 
-        function show(el) { el.classList.remove("hidden"); el.classList.add("fadeIn"); }
-        function hide(el) { el.classList.add("hidden"); el.classList.remove("fadeIn"); }
+            function show(el) { el.classList.remove("hidden"); el.classList.add("fadeIn"); }
+            function hide(el) { el.classList.add("hidden"); el.classList.remove("fadeIn"); }
 
-        function setProgress(step) {
-            const map = {
-                1: ["Identity check", 16],
-                2: ["Mini quiz", 32],
-                3: ["Preferences + time", 48],
-                4: ["Analysis", 64],
-                5: ["Confirm", 82],
-                6: ["Reservation", 100],
+            function setProgress(step) {
+                const map = {
+                    1: ["Identity check", 16],
+                    2: ["Mini quiz", 32],
+                    3: ["Preferences + time", 48],
+                    4: ["Analysis", 64],
+                    5: ["Confirm", 82],
+                    6: ["Reservation", 100],
+                };
+                $("stepText").textContent = `Step ${step} of 6`;
+                $("stepHint").textContent = map[step][0];
+                $("bar").style.width = map[step][1] + "%";
+            }
+
+            function goto(stepId, stepNum) {
+                ["step1", "step2", "step3", "step4", "step5", "step6"].forEach(s => hide($(s)));
+                show($(stepId));
+                setProgress(stepNum);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+
+            function alertBox(el, type, msg) {
+                el.className = "alert " + type;
+                el.textContent = msg;
+                show(el);
+            }
+
+            function norm(s) { return (s || "").trim().toLowerCase(); }
+
+            function timeToMinutes(t) {
+                const [h, m] = t.split(":").map(Number);
+                return h * 60 + m;
+            }
+
+            function overlaps(aStart, aEnd, bStart, bEnd) {
+                return Math.max(aStart, bStart) < Math.min(aEnd, bEnd);
+            }
+
+            function randomCode() {
+                const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+                let out = "";
+                for (let i = 0; i < 8; i++) out += chars[Math.floor(Math.random() * chars.length)];
+                return out;
+            }
+
+            function exclusiveChips(containerId, key, datasetKey) {
+                const row = $(containerId);
+                row.querySelectorAll("button").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        row.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
+                        btn.classList.add("selected");
+                        state[key] = btn.dataset[datasetKey];
+                    });
+                });
+            }
+
+            // ✅ Netlify Function caller
+            async function sendEmailNetlify(to, name, summary) {
+                const res = await fetch("/.netlify/functions/sendEmail", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ to, name, summary })
+                });
+                return await res.json();
+            }
+
+            /** =========================
+             *  State
+             *  ========================= */
+            const state = {
+                herName: "",
+                hasDate: "",
+                placeKnown: "",
+                placeText: "",
+                foodKnown: "",
+                foodText: "",
+                foodList: "",
+                vibe: "",
+                after: "",
+                notes: "",
+                startTime: "",
+                endTime: "",
+                reservationCode: "",
+                finalSummary: ""
             };
-            $("stepText").textContent = `Step ${step} of 6`;
-            $("stepHint").textContent = map[step][0];
-            $("bar").style.width = map[step][1] + "%";
-        }
 
-        function goto(stepId, stepNum) {
-            ["step1", "step2", "step3", "step4", "step5", "step6"].forEach(s => hide($(s)));
-            show($(stepId));
-            setProgress(stepNum);
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        }
+            /** =========================
+             *  Step 1
+             *  ========================= */
+            $("nameHintBtn").addEventListener("click", () => {
+                alertBox($("nameAlert"), "warn", "Hint: try your exact name / nickname 😌");
+            });
 
-        function alertBox(el, type, msg) {
-            el.className = "alert " + type;
-            el.textContent = msg;
-            show(el);
-        }
+            $("nameNextBtn").addEventListener("click", () => {
+                const input = $("nameInput").value;
+                const ok = HER_ALLOWED_NAMES.map(norm).includes(norm(input));
 
-        function norm(s) { return (s || "").trim().toLowerCase(); }
+                if (!norm(input)) {
+                    alertBox($("nameAlert"), "bad", "Type your name first 🙂");
+                    return;
+                }
+                if (!ok) {
+                    alertBox($("nameAlert"), "bad", "Nope 😤 That’s not you. Try again.");
+                    return;
+                }
 
-        function timeToMinutes(t) {
-            const [h, m] = t.split(":").map(Number);
-            return h * 60 + m;
-        }
+                state.herName = input.trim();
+                hide($("nameAlert"));
+                $("herNameText").textContent = state.herName;
+                goto("step2", 2);
+            });
 
-        function overlaps(aStart, aEnd, bStart, bEnd) {
-            return Math.max(aStart, bStart) < Math.min(aEnd, bEnd);
-        }
+            $("nameInput").addEventListener("keydown", (e) => {
+                if (e.key === "Enter") $("nameNextBtn").click();
+            });
 
-        function randomCode() {
-            const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-            let out = "";
-            for (let i = 0; i < 8; i++) out += chars[Math.floor(Math.random() * chars.length)];
-            return out;
-        }
+            /** =========================
+             *  Step 2
+             *  ========================= */
+            (function setupHasDate() {
+                const row = $("hasDateRow");
+                row.querySelectorAll("button").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        row.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
+                        btn.classList.add("selected");
+                        state.hasDate = btn.dataset.val;
+                        hide($("dateAlert"));
 
-        function exclusiveChips(containerId, key, datasetKey) {
-            const row = $(containerId);
-            row.querySelectorAll("button").forEach(btn => {
-                btn.addEventListener("click", () => {
-                    row.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
-                    btn.classList.add("selected");
-                    state[key] = btn.dataset[datasetKey];
+                        if (state.hasDate === "yes") {
+                            alertBox($("dateAlert"), "bad",
+                                "EXCUSE ME??? WHO TF IS THAT?!?!? 😤💔\nBro I'm your girlfriend?!?!\nPick NO right now 😭"
+                            );
+                        } else {
+                            alertBox($("dateAlert"), "ok", "Good hehe. Correct answer 😌✅");
+                        }
+                    });
                 });
+            })();
+
+            $("quizNextBtn").addEventListener("click", () => {
+                if (!state.hasDate) {
+                    alertBox($("dateAlert"), "warn", "Answer the question first 😌");
+                    return;
+                }
+                if (state.hasDate === "yes") {
+                    alertBox($("dateAlert"), "bad",
+                        "Nope. You can’t proceed with ‘YES’ 😤\nChange it to ‘NO’ so we can continue graah!"
+                    );
+                    return;
+                }
+                goto("step3", 3);
             });
-        }
 
-        async function sendEmailNetlify(to, name, summary) {
-            const res = await fetch("/.netlify/functions/sendEmail", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ to, name, summary })
+            $("backTo1").addEventListener("click", () => goto("step1", 1));
+
+            /** =========================
+             *  Step 3
+             *  ========================= */
+            exclusiveChips("placeKnownRow", "placeKnown", "known");
+            exclusiveChips("foodKnownRow", "foodKnown", "known");
+            exclusiveChips("vibeRow", "vibe", "vibe");
+
+            $("placeKnownRow").addEventListener("click", () => {
+                if (state.placeKnown === "yes") show($("placeInputWrap"));
+                else hide($("placeInputWrap"));
             });
-            return await res.json();
-        }
 
+            $("foodKnownRow").addEventListener("click", () => {
+                if (state.foodKnown === "yes") show($("foodInputWrap"));
+                else hide($("foodInputWrap"));
+            });
 
-        const text = await res.text();
-        try {
-            return JSON.parse(text);
-        } catch {
-            return { ok: false, message: "Server returned non-JSON. Check send_email.php path or PHP error.", raw: text };
-        }
+            $("backTo2").addEventListener("click", () => goto("step2", 2));
 
-        /** =========================
-         *  State
-         *  ========================= */
-        const state = {
-            herName: "",
-            hasDate: "",
-            placeKnown: "",
-            placeText: "",
-            foodKnown: "",
-            foodText: "",
-            foodList: "",
-            vibe: "",
-            after: "",
-            notes: "",
-            startTime: "",
-            endTime: "",
-            reservationCode: "",
-            finalSummary: ""
-        };
+            function buildAfterIdeas(isLate) {
+                const row = $("afterRow");
+                row.innerHTML = "";
 
-        /** =========================
-         *  Step 1
-         *  ========================= */
-        $("nameHintBtn").addEventListener("click", () => {
-            alertBox($("nameAlert"), "warn", "Hint: try your exact name / nickname 😌");
-        });
+                const always = [
+                    "No after-date, I just want to go home 🏠",
+                    "Stay longer at the same spot 🕰️",
+                    "Walk + talk 🌙",
+                    "Dessert & coffee 🍰",
+                    "Movie (home) 🎬"
+                ];
 
-        $("nameNextBtn").addEventListener("click", () => {
-            const input = $("nameInput").value;
-            const ok = HER_ALLOWED_NAMES.map(norm).includes(norm(input));
+                const earlyExtras = ["Arcade / games 🎮", "Photobooth 📸"];
+                const lateExtras = ["Drive-thru snacks 🍟", "Stargazing / quiet spot ✨", "Home cuddle session 🫶"];
 
-            if (!norm(input)) {
-                alertBox($("nameAlert"), "bad", "Type your name first 🙂");
-                return;
-            }
-            if (!ok) {
-                alertBox($("nameAlert"), "bad", "Nope 😤 That’s not you. Try again.");
-                return;
-            }
-            state.herName = input.trim();
-            hide($("nameAlert"));
-            $("herNameText").textContent = state.herName;
-            goto("step2", 2);
-        });
+                const list = isLate ? [...always, ...lateExtras] : [...always, ...earlyExtras];
 
-        $("nameInput").addEventListener("keydown", (e) => {
-            if (e.key === "Enter") $("nameNextBtn").click();
-        });
-
-        /** =========================
-         *  Step 2
-         *  ========================= */
-        (function setupHasDate() {
-            const row = $("hasDateRow");
-            row.querySelectorAll("button").forEach(btn => {
-                btn.addEventListener("click", () => {
-                    row.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
-                    btn.classList.add("selected");
-                    state.hasDate = btn.dataset.val;
-                    hide($("dateAlert"));
-
-                    if (state.hasDate === "yes") {
-                        alertBox($("dateAlert"), "bad",
-                            "EXCUSE ME??? WHO TF IS THAT?!?!? 😤💔\nBro I'm your girlfriend?!?!\nPick NO right now 😭"
-                        );
-                    } else {
-                        alertBox($("dateAlert"), "ok", "Good hehe. Correct answer 😌✅");
-                    }
+                list.forEach((label) => {
+                    const btn = document.createElement("button");
+                    btn.className = "chip";
+                    btn.textContent = label;
+                    btn.dataset.after = label;
+                    btn.addEventListener("click", () => {
+                        row.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
+                        btn.classList.add("selected");
+                        state.after = label;
+                    });
+                    row.appendChild(btn);
                 });
-            });
-        })();
-
-        $("quizNextBtn").addEventListener("click", () => {
-            if (!state.hasDate) {
-                alertBox($("dateAlert"), "warn", "Answer the question first 😌");
-                return;
-            }
-            if (state.hasDate === "yes") {
-                alertBox($("dateAlert"), "bad",
-                    "Nope. You can’t proceed with ‘YES’ 😤\nChange it to ‘NO’ so we can continue graah!"
-                );
-                return;
-            }
-            goto("step3", 3);
-        });
-
-        $("backTo1").addEventListener("click", () => goto("step1", 1));
-
-        /** =========================
-         *  Step 3
-         *  ========================= */
-        exclusiveChips("placeKnownRow", "placeKnown", "known");
-        exclusiveChips("foodKnownRow", "foodKnown", "known");
-        exclusiveChips("vibeRow", "vibe", "vibe");
-
-        $("placeKnownRow").addEventListener("click", () => {
-            if (state.placeKnown === "yes") show($("placeInputWrap"));
-            else hide($("placeInputWrap"));
-        });
-
-        $("foodKnownRow").addEventListener("click", () => {
-            if (state.foodKnown === "yes") show($("foodInputWrap"));
-            else hide($("foodInputWrap"));
-        });
-
-        $("backTo2").addEventListener("click", () => goto("step2", 2));
-
-        function buildAfterIdeas(isLate) {
-            const row = $("afterRow");
-            row.innerHTML = "";
-
-            const always = [
-                "No after-date, I just want to go home 🏠",
-                "Stay longer at the same spot 🕰️",
-                "Walk + talk 🌙",
-                "Dessert & coffee 🍰",
-                "Movie (home) 🎬"
-            ];
-
-            const earlyExtras = [
-                "Arcade / games 🎮",
-                "Photobooth 📸"
-            ];
-
-            const lateExtras = [
-                "Drive-thru snacks 🍟",
-                "Stargazing / quiet spot ✨",
-                "Home cuddle session 🫶"
-            ];
-
-            const list = isLate ? [...always, ...lateExtras] : [...always, ...earlyExtras];
-
-            list.forEach((label) => {
-                const btn = document.createElement("button");
-                btn.className = "chip";
-                btn.textContent = label;
-                btn.dataset.after = label;
-                btn.addEventListener("click", () => {
-                    row.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
-                    btn.classList.add("selected");
-                    state.after = label;
-                });
-                row.appendChild(btn);
-            });
-        }
-
-        function validateTimeAndRefreshIdeas() {
-            const start = $("startTime").value;
-            const end = $("endTime").value;
-            state.startTime = start;
-            state.endTime = end;
-
-            if (!start || !end) {
-                buildAfterIdeas(false);
-                alertBox($("timeAlert"), "warn", "Set both start and end time.");
-                hide($("lateHint"));
-                return false;
-            }
-            const s = timeToMinutes(start);
-            const e = timeToMinutes(end);
-
-            if (e <= s) {
-                buildAfterIdeas(false);
-                alertBox($("timeAlert"), "bad", "End time must be after start time 🙂");
-                hide($("lateHint"));
-                return false;
             }
 
-            const bs = timeToMinutes(YOUR_BUSY_START);
-            const be = timeToMinutes(YOUR_BUSY_END);
+            function validateTimeAndRefreshIdeas() {
+                const start = $("startTime").value;
+                const end = $("endTime").value;
+                state.startTime = start;
+                state.endTime = end;
 
-            if (overlaps(s, e, bs, be)) {
-                if (BLOCK_OVERLAP) {
+                if (!start || !end) {
                     buildAfterIdeas(false);
-                    alertBox($("timeAlert"), "bad", `That overlaps my work time (${YOUR_BUSY_START}–${YOUR_BUSY_END}) 😭 Pick another slot pls`);
+                    alertBox($("timeAlert"), "warn", "Set both start and end time.");
                     hide($("lateHint"));
                     return false;
+                }
+
+                const s = timeToMinutes(start);
+                const e = timeToMinutes(end);
+
+                if (e <= s) {
+                    buildAfterIdeas(false);
+                    alertBox($("timeAlert"), "bad", "End time must be after start time 🙂");
+                    hide($("lateHint"));
+                    return false;
+                }
+
+                const bs = timeToMinutes(YOUR_BUSY_START);
+                const be = timeToMinutes(YOUR_BUSY_END);
+
+                if (overlaps(s, e, bs, be)) {
+                    if (BLOCK_OVERLAP) {
+                        buildAfterIdeas(false);
+                        alertBox($("timeAlert"), "bad", `That overlaps my work time (${YOUR_BUSY_START}–${YOUR_BUSY_END}) 😭 Pick another slot pls`);
+                        hide($("lateHint"));
+                        return false;
+                    } else {
+                        alertBox($("timeAlert"), "warn", `That overlaps my work time (${YOUR_BUSY_START}–${YOUR_BUSY_END}). We can try… but later is safer 😅`);
+                    }
                 } else {
-                    alertBox($("timeAlert"), "warn", `That overlaps my work time (${YOUR_BUSY_START}–${YOUR_BUSY_END}). We can try… but later is safer 😅`);
+                    alertBox($("timeAlert"), "ok", "Timing looks good ✅");
                 }
-            } else {
-                alertBox($("timeAlert"), "ok", "Timing looks good ✅");
-            }
 
-            const isLate = s >= LATE_START_MINUTES;
-            buildAfterIdeas(isLate);
+                const isLate = s >= LATE_START_MINUTES;
+                buildAfterIdeas(isLate);
 
-            if (isLate) {
-                alertBox($("lateHint"), "warn", "It’s kinda late — showing late-friendly options so we don’t plan something that’s likely closed 😅");
-            } else {
-                hide($("lateHint"));
-            }
-            return true;
-        }
-
-        $("startTime").addEventListener("change", validateTimeAndRefreshIdeas);
-        $("endTime").addEventListener("change", validateTimeAndRefreshIdeas);
-
-        buildAfterIdeas(false);
-
-        function buildPlanSummary() {
-            const placeFinal = state.placeKnown === "yes" ? ($("placeInput").value.trim()) : "(surprise me)";
-            const foodFinal = state.foodKnown === "yes" ? ($("foodInput").value.trim()) : ($("foodSel").value.trim());
-
-            const summaryHtml = `
-        <p style="margin:0; font-weight:1000;">Plan preview 💌</p>
-        <p style="margin:10px 0 0;"><strong>For:</strong> ${state.herName}</p>
-        <p style="margin:6px 0 0;"><strong>Time:</strong> ${state.startTime} – ${state.endTime}</p>
-        <p style="margin:6px 0 0;"><strong>Place:</strong> ${placeFinal}</p>
-        <p style="margin:6px 0 0;"><strong>Food:</strong> ${foodFinal}</p>
-        <p style="margin:6px 0 0;"><strong>Vibe:</strong> ${state.vibe}</p>
-        <p style="margin:6px 0 0;"><strong>After:</strong> ${state.after}</p>
-        <p style="margin:6px 0 0;"><strong>Notes:</strong> ${state.notes ? state.notes : "(none)"}</p>
-      `;
-
-            const summaryText =
-                `Valentine Reservation 💖
-Guest: ${state.herName}
-Match: ${YOUR_NAME}
-Time: ${state.startTime} – ${state.endTime}
-Place: ${placeFinal}
-Food: ${foodFinal}
-Vibe: ${state.vibe}
-After: ${state.after}
-Notes: ${state.notes ? state.notes : "(none)"}
-Code: ${state.reservationCode}`;
-
-            return { placeFinal, foodFinal, summaryHtml, summaryText };
-        }
-
-        $("matchBtn").addEventListener("click", () => {
-            state.placeText = $("placeInput").value.trim();
-            state.foodText = $("foodInput").value.trim();
-            state.foodList = $("foodSel").value.trim();
-            state.notes = $("notes").value.trim();
-
-            if (!state.placeKnown) { alertBox($("timeAlert"), "bad", "Answer whether you already have a place in mind 🙂"); return; }
-            if (state.placeKnown === "yes" && !state.placeText) { alertBox($("timeAlert"), "bad", "Tell me what place you have in mind 🙂"); return; }
-
-            if (!state.foodKnown) { alertBox($("timeAlert"), "bad", "Answer whether you already know what you want to eat 🙂"); return; }
-            if (state.foodKnown === "yes" && !state.foodText) { alertBox($("timeAlert"), "bad", "Tell me what food you want 🙂"); return; }
-            if (state.foodKnown === "no" && !state.foodList) { alertBox($("timeAlert"), "bad", "Pick a food option from the list 🙂"); return; }
-
-            if (!state.vibe) { alertBox($("timeAlert"), "bad", "Pick a place vibe 🙂"); return; }
-            if (!state.after) { alertBox($("timeAlert"), "bad", "Pick an after-date option 🙂"); return; }
-
-            if (!validateTimeAndRefreshIdeas()) return;
-
-            goto("step4", 4);
-            runAnalysisThenShowMatch();
-        });
-
-        const analysisLines = [
-            'Running: “Is she the cutest?” → YES',
-            'Checking: “Vibe compatibility” → PERFECT',
-            'Computing: “Love score” → 9999/10',
-            'Validating: “Girlfriend availability” → OK ✅',
-            'Finalizing: “Reservation” → almost there…'
-        ];
-
-        function runAnalysisThenShowMatch() {
-            let i = 0;
-            const lineEl = $("analysisLine");
-            const timer = setInterval(() => {
-                lineEl.textContent = analysisLines[i % analysisLines.length];
-                i++;
-                if (i === 7) {
-                    clearInterval(timer);
-                    $("matchName").textContent = YOUR_NAME;
-                    state.reservationCode = randomCode();
-
-                    const { summaryHtml, summaryText } = buildPlanSummary();
-                    state.finalSummary = summaryText;
-                    $("planSummary").innerHTML = summaryHtml;
-
-                    hide($("confirmAlert"));
-                    goto("step5", 5);
-                }
-            }, 650);
-        }
-
-        const noBtn = $("confirmNo");
-        function dodge() {
-            const dx = Math.floor(Math.random() * 220) - 110;
-            const dy = Math.floor(Math.random() * 90) - 45;
-            noBtn.style.transform = `translate(${dx}px, ${dy}px)`;
-        }
-        noBtn.addEventListener("mouseover", dodge);
-        noBtn.addEventListener("click", () => {
-            alertBox($("confirmAlert"), "warn", "Are you sure sure? 😭 Try again…");
-            dodge();
-        });
-
-        $("confirmYes").addEventListener("click", () => {
-            const { placeFinal, foodFinal, summaryText } = buildPlanSummary();
-            state.finalSummary = summaryText;
-
-            $("ticketGuest").textContent = state.herName;
-            $("ticketTime").textContent = `${state.startTime} – ${state.endTime}`;
-            $("ticketFood").textContent = foodFinal;
-            $("ticketPlace").textContent = placeFinal;
-            $("ticketAfter").textContent = state.after;
-            $("ticketNotes").textContent = state.notes ? state.notes : "none";
-            $("ticketCode").textContent = state.reservationCode;
-
-            $("finalText").textContent = summaryText;
-            hide($("emailAlert"));
-            goto("step6", 6);
-        });
-
-        $("copyFinal").addEventListener("click", async () => {
-            try {
-                await navigator.clipboard.writeText($("finalText").textContent);
-                $("copyFinal").textContent = "Copied ✅";
-                setTimeout(() => $("copyFinal").textContent = "Copy ✅", 1200);
-            } catch (e) {
-                alert("Copy failed — just highlight and copy manually 🙂");
-            }
-        });
-
-        $("emailFinal").addEventListener("click", async () => {
-            const email = ($("gfEmail").value || "").trim();
-            if (!email) {
-                alertBox($("emailAlert"), "warn", "Please type her email first 🙂");
-                return;
-            }
-
-            alertBox($("emailAlert"), "warn", "Sending… 💌");
-
-            try {
-                const result = await sendEmailNetlify(email, state.herName, $("finalText").textContent);
-                if (result.ok) {
-                    alertBox($("emailAlert"), "ok", result.message || "Email sent ✅");
+                if (isLate) {
+                    alertBox($("lateHint"), "warn", "It’s kinda late — showing late-friendly options so we don’t plan something that’s likely closed 😅");
                 } else {
-                    alertBox($("emailAlert"), "bad", result.message || "Email failed to send.");
+                    hide($("lateHint"));
                 }
-            } catch (e) {
-                alertBox($("emailAlert"), "bad", "Network/server error sending email.");
+                return true;
             }
-        });
 
+            $("startTime").addEventListener("change", validateTimeAndRefreshIdeas);
+            $("endTime").addEventListener("change", validateTimeAndRefreshIdeas);
 
-        $("backTo2").addEventListener("click", () => goto("step2", 2));
+            buildAfterIdeas(false);
 
-        $("restart").addEventListener("click", () => {
-            Object.keys(state).forEach(k => state[k] = "");
-            $("nameInput").value = "";
-            $("placeInput").value = "";
-            $("foodInput").value = "";
-            $("foodSel").value = "";
-            $("notes").value = "";
-            $("startTime").value = "";
-            $("endTime").value = "";
-            $("gfEmail").value = "";
+            function buildPlanSummary() {
+                const placeFinal = state.placeKnown === "yes" ? ($("placeInput").value.trim()) : "(surprise me)";
+                const foodFinal = state.foodKnown === "yes" ? ($("foodInput").value.trim()) : ($("foodSel").value.trim());
 
-            ["hasDateRow", "placeKnownRow", "foodKnownRow", "vibeRow", "afterRow"].forEach(id => {
-                const el = $(id);
-                el.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
+                const summaryHtml = `
+          <p style="margin:0; font-weight:1000;">Plan preview 💌</p>
+          <p style="margin:10px 0 0;"><strong>For:</strong> ${state.herName}</p>
+          <p style="margin:6px 0 0;"><strong>Time:</strong> ${state.startTime} – ${state.endTime}</p>
+          <p style="margin:6px 0 0;"><strong>Place:</strong> ${placeFinal}</p>
+          <p style="margin:6px 0 0;"><strong>Food:</strong> ${foodFinal}</p>
+          <p style="margin:6px 0 0;"><strong>Vibe:</strong> ${state.vibe}</p>
+          <p style="margin:6px 0 0;"><strong>After:</strong> ${state.after}</p>
+          <p style="margin:6px 0 0;"><strong>Notes:</strong> ${state.notes ? state.notes : "(none)"}</p>
+        `;
+
+                const summaryText =
+                    `Valentine Reservation 💖
+    Guest: ${state.herName}
+    Match: ${YOUR_NAME}
+    Time: ${state.startTime} – ${state.endTime}
+    Place: ${placeFinal}
+    Food: ${foodFinal}
+    Vibe: ${state.vibe}
+    After: ${state.after}
+    Notes: ${state.notes ? state.notes : "(none)"}
+    Code: ${state.reservationCode}`;
+
+                return { placeFinal, foodFinal, summaryHtml, summaryText };
+            }
+
+            $("matchBtn").addEventListener("click", () => {
+                state.placeText = $("placeInput").value.trim();
+                state.foodText = $("foodInput").value.trim();
+                state.foodList = $("foodSel").value.trim();
+                state.notes = $("notes").value.trim();
+
+                if (!state.placeKnown) { alertBox($("timeAlert"), "bad", "Answer whether you already have a place in mind 🙂"); return; }
+                if (state.placeKnown === "yes" && !state.placeText) { alertBox($("timeAlert"), "bad", "Tell me what place you have in mind 🙂"); return; }
+
+                if (!state.foodKnown) { alertBox($("timeAlert"), "bad", "Answer whether you already know what you want to eat 🙂"); return; }
+                if (state.foodKnown === "yes" && !state.foodText) { alertBox($("timeAlert"), "bad", "Tell me what food you want 🙂"); return; }
+                if (state.foodKnown === "no" && !state.foodList) { alertBox($("timeAlert"), "bad", "Pick a food option from the list 🙂"); return; }
+
+                if (!state.vibe) { alertBox($("timeAlert"), "bad", "Pick a place vibe 🙂"); return; }
+                if (!state.after) { alertBox($("timeAlert"), "bad", "Pick an after-date option 🙂"); return; }
+
+                if (!validateTimeAndRefreshIdeas()) return;
+
+                goto("step4", 4);
+                runAnalysisThenShowMatch();
             });
 
-            hide($("placeInputWrap"));
-            hide($("foodInputWrap"));
-            hide($("nameAlert"));
-            hide($("dateAlert"));
-            hide($("timeAlert"));
-            hide($("lateHint"));
-            hide($("confirmAlert"));
-            hide($("emailAlert"));
+            const analysisLines = [
+                'Running: “Is she the cutest?” → YES',
+                'Checking: “Vibe compatibility” → PERFECT',
+                'Computing: “Love score” → 9999/10',
+                'Validating: “Girlfriend availability” → OK ✅',
+                'Finalizing: “Reservation” → almost there…'
+            ];
 
-            noBtn.style.transform = "translate(0,0)";
-            buildAfterIdeas(false);
+            function runAnalysisThenShowMatch() {
+                let i = 0;
+                const lineEl = $("analysisLine");
+                const timer = setInterval(() => {
+                    lineEl.textContent = analysisLines[i % analysisLines.length];
+                    i++;
+                    if (i === 7) {
+                        clearInterval(timer);
+                        $("matchName").textContent = YOUR_NAME;
+                        state.reservationCode = randomCode();
+
+                        const { summaryHtml, summaryText } = buildPlanSummary();
+                        state.finalSummary = summaryText;
+                        $("planSummary").innerHTML = summaryHtml;
+
+                        hide($("confirmAlert"));
+                        goto("step5", 5);
+                    }
+                }, 650);
+            }
+
+            const noBtn = $("confirmNo");
+            function dodge() {
+                const dx = Math.floor(Math.random() * 220) - 110;
+                const dy = Math.floor(Math.random() * 90) - 45;
+                noBtn.style.transform = `translate(${dx}px, ${dy}px)`;
+            }
+            noBtn.addEventListener("mouseover", dodge);
+            noBtn.addEventListener("click", () => {
+                alertBox($("confirmAlert"), "warn", "Are you sure sure? 😭 Try again…");
+                dodge();
+            });
+
+            $("confirmYes").addEventListener("click", () => {
+                const { placeFinal, foodFinal, summaryText } = buildPlanSummary();
+                state.finalSummary = summaryText;
+
+                $("ticketGuest").textContent = state.herName;
+                $("ticketTime").textContent = `${state.startTime} – ${state.endTime}`;
+                $("ticketFood").textContent = foodFinal;
+                $("ticketPlace").textContent = placeFinal;
+                $("ticketAfter").textContent = state.after;
+                $("ticketNotes").textContent = state.notes ? state.notes : "none";
+                $("ticketCode").textContent = state.reservationCode;
+
+                $("finalText").textContent = summaryText;
+
+                // ✅ Flower message update
+                $("flowerMsg").textContent = `Here is your flower, ${state.herName} 🌸 Thank you for being my Valentine date 💖`;
+
+                hide($("emailAlert"));
+                goto("step6", 6);
+            });
+
+            $("copyFinal").addEventListener("click", async () => {
+                try {
+                    await navigator.clipboard.writeText($("finalText").textContent);
+                    $("copyFinal").textContent = "Copied ✅";
+                    setTimeout(() => $("copyFinal").textContent = "Copy ✅", 1200);
+                } catch (e) {
+                    alert("Copy failed — just highlight and copy manually 🙂");
+                }
+            });
+
+            $("emailFinal").addEventListener("click", async () => {
+                const email = ($("gfEmail").value || "").trim();
+                if (!email) {
+                    alertBox($("emailAlert"), "warn", "Please type her email first 🙂");
+                    return;
+                }
+
+                alertBox($("emailAlert"), "warn", "Sending… 💌");
+
+                try {
+                    const result = await sendEmailNetlify(email, state.herName, $("finalText").textContent);
+                    if (result.ok) {
+                        alertBox($("emailAlert"), "ok", result.message || "Email sent ✅");
+                    } else {
+                        alertBox($("emailAlert"), "bad", result.message || "Email failed to send.");
+                    }
+                } catch (e) {
+                    alertBox($("emailAlert"), "bad", "Network/server error sending email.");
+                }
+            });
+
+            $("restart").addEventListener("click", () => {
+                Object.keys(state).forEach(k => state[k] = "");
+                $("nameInput").value = "";
+                $("placeInput").value = "";
+                $("foodInput").value = "";
+                $("foodSel").value = "";
+                $("notes").value = "";
+                $("startTime").value = "";
+                $("endTime").value = "";
+                $("gfEmail").value = "";
+
+                ["hasDateRow", "placeKnownRow", "foodKnownRow", "vibeRow", "afterRow"].forEach(id => {
+                    const el = $(id);
+                    el.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
+                });
+
+                hide($("placeInputWrap"));
+                hide($("foodInputWrap"));
+                hide($("nameAlert"));
+                hide($("dateAlert"));
+                hide($("timeAlert"));
+                hide($("lateHint"));
+                hide($("confirmAlert"));
+                hide($("emailAlert"));
+
+                noBtn.style.transform = "translate(0,0)";
+                buildAfterIdeas(false);
+                goto("step1", 1);
+            });
+
+            // Start
             goto("step1", 1);
         });
-
-        // Start
-        goto("step1", 1);
     </script>
+
 </body>
 
 </html>

@@ -32,7 +32,6 @@ exports.handler = async (event) => {
     const name = (payload.name || "love").trim();
     const summary = (payload.summary || "").trim();
 
-    // Basic validation
     if (!to || !to.includes("@")) return json(400, { ok: false, message: "Invalid recipient email." });
     if (summary.length < 10) return json(400, { ok: false, message: "Summary too short." });
 
@@ -40,16 +39,12 @@ exports.handler = async (event) => {
     const EMAIL_PASS = process.env.EMAIL_PASS; // Gmail App Password
 
     if (!EMAIL_USER || !EMAIL_PASS) {
-        return json(500, { ok: false, message: "Missing EMAIL_USER / EMAIL_PASS env vars on Netlify." });
+        return json(500, { ok: false, message: "Missing EMAIL_USER / EMAIL_PASS in Netlify env vars." });
     }
 
-    // Gmail SMTP
     const transporter = nodemailer.createTransport({
         service: "gmail",
-        auth: {
-            user: EMAIL_USER,
-            pass: EMAIL_PASS,
-        },
+        auth: { user: EMAIL_USER, pass: EMAIL_PASS },
     });
 
     const subject = "💖 Valentine’s Date Reservation";
@@ -69,9 +64,8 @@ ${summary}
             subject,
             text,
         });
-
         return json(200, { ok: true, message: "Email sent successfully 💌" });
     } catch (err) {
-        return json(500, { ok: false, message: "Email send failed: " + err.message });
+        return json(500, { ok: false, message: "Email failed: " + err.message });
     }
 };
